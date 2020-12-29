@@ -27,7 +27,7 @@ public class PubaccManageService {
         params.put("userid", userId);
         params.put("ssb", ssb);
         params.put("time", time);
-        params.put("pubtoken", shacode.sha(eid, pubId, pubSecret, String.valueOf(time)));
+        params.put("pubtoken", Shacode.sha(eid, pubId, pubSecret, String.valueOf(time)));
         return XTHttpClient.getHttpClient().httpPost(pubSsbUrl, params.toJSONString(), "application/x-www-form-urlencoded", null, 5000);
     }
 

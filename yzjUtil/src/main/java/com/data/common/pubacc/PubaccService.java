@@ -20,16 +20,16 @@ public class PubaccService {
 
     private static Logger logger = LoggerFactory.getLogger(PubaccService.class);
 
-    @Value("${vv.host:http://vvtest.vanke.com}")
+    @Value("${yzj.host:http://127.0.0.1}")
     private static String host;
 
-    @Value("${vv.pushUrl:/pubacc/pubsend}")
+    @Value("${yzj.pushUrl:/pubacc/pubsend}")
     private static String pushUrl;
 
-    @Value("${vv.pubaccId:1}")
+    @Value("${yzj.pubaccId:1}")
     private static String pubacc;
 
-    @Value("${vv.pubaccKey:1}")
+    @Value("${yzj.pubaccKey:1}")
     private static String pubaccKey;
 
 
@@ -44,7 +44,7 @@ public class PubaccService {
         from.put("pub", pub);
         from.put("time", time);
         from.put("nonce", random);
-        from.put("pubtoken", shacode.sha(pushMessage.getFromEid(), pub, pkey, random, String.valueOf(time)));
+        from.put("pubtoken", Shacode.sha(pushMessage.getFromEid(), pub, pkey, random, String.valueOf(time)));
 
         List<Map<String, Object>> tos = new ArrayList<Map<String, Object>>();
         Map<String, Object> to = new HashMap<>();
@@ -61,14 +61,12 @@ public class PubaccService {
         if (pushMessage.getType() == 2) {
             msg.put("text", pushMessage.getContent());
         }
-
         if (pushMessage.getType() == 5) {
             msg.put("text", pushMessage.getContent());
             msg.put("url", pushMessage.getUrl());
             msg.put("appid", pushMessage.getAppid());
             msg.put("todo", "0");
         }
-
         if (pushMessage.getType() == 6) {
             if (pushMessage.getModel() == 1) {
                 detail.put("date", nowDate);
@@ -96,7 +94,6 @@ public class PubaccService {
                 msg.put("appid", pushMessage.getAppid());
                 msg.put("todo", "0");
             }
-
             if (pushMessage.getModel() == 3) {
                 detail.put("date", nowDate);
                 detail.put("title", pushMessage.getMsgTitle());
@@ -114,7 +111,6 @@ public class PubaccService {
             }
 
         }
-
         JSONObject content = new JSONObject();
         content.put("from", from);
         content.put("to", tos);

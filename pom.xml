@@ -21,7 +21,7 @@
         <module>gatewayUtil</module>
         <module>threadUtil</module>
         <module>elasticsearchPool</module>
-        <module>vvUtil</module>
+        <module>yzjUtil</module>
         <module>commons</module>
     </modules>
 

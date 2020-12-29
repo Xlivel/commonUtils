@@ -28,9 +28,9 @@ import java.io.*;
  * vv文件上传和图片上传
  * @author wj
  */
-public class VVUploadService {
+public class YzjUploadService {
 
-    private static Logger logger = LoggerFactory.getLogger(VVUploadService.class);
+    private static Logger logger = LoggerFactory.getLogger(YzjUploadService.class);
 
     private static final String uploadFileUrl = "/docrest/doc/file/uploadfile?accessToken=";
     private static final String uploadBase64Url = "/docrest/base64/upload";
@@ -161,9 +161,9 @@ public class VVUploadService {
 
     public static void main(String[] args) throws Exception {
         String eid = "16216997";
-        VVUploadService vvUploadService = new VVUploadService();
+        YzjUploadService yzjUploadService = new YzjUploadService();
 
-        String s = vvUploadService.uploadFile(new File("C:\\Users\\wu_ang\\Desktop\\pc9.2.4下载地址.txt"));
+        String s = yzjUploadService.uploadFile(new File("C:\\Users\\wu_ang\\Desktop\\pc9.2.4下载地址.txt"));
         System.out.println("asdsad");
     }
 

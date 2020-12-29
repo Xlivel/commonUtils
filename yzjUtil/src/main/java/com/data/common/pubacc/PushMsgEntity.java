@@ -4,25 +4,64 @@ import java.util.Collection;
 
 public class PushMsgEntity {
 
-    private String fromEid;// 发送方的eid
-    private String toEid;// 接收方的eid
-    private Collection<String> toUsersid;// 接收方的userid
-    private String msgTitle; // 消息头
-    private String msgContent; // 消息内容
-    private String appid;// 应用appid
-    private String pubacc;// 公共号
-    private String pubaccKey;// 公共号key
-    private int model;// 消息模型(1：单条文本编排模板,2：单条图文混排模板,3：多条图文混排模板,4：应用消息模板)
+    /**
+     * 发送方的eid
+     **/
+    private String fromEid;
+    /**
+     * 接收方的eid
+     **/
+    private String toEid;
+    /**
+     * 接收方的userid
+     **/
+    private Collection<String> toUsersid;
+    /**
+     * 消息头
+     **/
+    private String msgTitle;
+    /**
+     * 消息内容
+     **/
+    private String msgContent;
+    /**
+     * 应用appid
+     **/
+    private String appid;
+    /**
+     * 公共号
+     **/
+    private String pubacc;
+    /**
+     * 公共号key
+     **/
+    private String pubaccKey;
+    /**
+     * 消息模型(1：单条文本编排模板,2：单条图文混排模板,3：多条图文混排模板,4：应用消息模板)
+     **/
+    private int model;
     /**
      * code=all: “to”:[{“no”:”10001″,”code”:”all”}] 表示企业10001所有订阅的用户。”code”:”all”一定不要漏,否则报错。
      * code不传: “to”:[{“no”:”10002″,”user”:[“3″,”4”]}] 表示企业10001的openId为3, 4的用户
      * code=2: “to”:[{“no”:”10001″,”user”:[“admin.admin.com”,”13750067719″],”code”:”2″}] 表示企业10001的账号为admin.admin.com, 13750067719的用户
      */
     private String code;
-    private String url; // 内容url
-    private int type;// (取值 2：单文本,5：文本链接,6：图文链接)
-    private String pushUrl;  //文本链接地址，格式为经过URLENCODE编码的字符串
-    private String content;  //文本消息内容，格式为字符串
+    /**
+     * 内容url
+     **/
+    private String url;
+    /**
+     * (取值 2：单文本,5：文本链接,6：图文链接)
+     **/
+    private int type;
+    /**
+     * 文本链接地址，格式为经过URLENCODE编码的字符串
+     **/
+    private String pushUrl;
+    /**
+     * 文本消息内容，格式为字符串
+     **/
+    private String content;
     private String msgzip;
     private String msgpic;
     private String msgpicname;

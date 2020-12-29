@@ -45,7 +45,7 @@ public class YzjUtil {
     }
 
     public String getAccessToken() {
-        // 如果没有token信息或者已经过期, 重新从api获取
+        /** 如果没有token信息或者已经过期, 重新从api获取 **/
         String accessToken = redisUtils.get(ACCESS_TOKEN_KEY);
         if (StringUtils.isNotBlank(accessToken)) {
             return accessToken;
