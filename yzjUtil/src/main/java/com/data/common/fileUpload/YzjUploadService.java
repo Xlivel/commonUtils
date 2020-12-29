@@ -38,16 +38,23 @@ public class YzjUploadService {
     private static final String downFileUrlWithoutAuth = "/microblog/filesvr/";
     private static final String imageBaseUrlWithoutAuth = "/space/c/photo/load?id=";
 
-    @Value("${vv.host:http://vvtest.vanke.com}")
-    private String opensysHost = "http://vvtest.vanke.com";
+    @Value("${vv.host:http://127.0.0.1}")
+    private String opensysHost;
 
-    @Value("${vv.openFileSecret:wWmFZWbuFyUfztdPUc4mwi5MiVPKnXoa}")
-    private String openFileSecret = "wWmFZWbuFyUfztdPUc4mwi5MiVPKnXoa";
+    @Value("${vv.openFileSecret:1}")
+    private String openFileSecret;
 
-    @Value("${vv.defaultEid:16216997}")
-    private String defaultEid = "16216997";
+    @Value("${vv.defaultEid:1}")
+    private String defaultEid;
 
-    //文件上传
+    /**
+     * 文件上传
+     * @param contentType
+     * @param inputStream
+     * @param fileName
+     * @return
+     * @throws Exception
+     */
     public String uploadFile(String contentType, InputStream inputStream, String fileName) throws Exception {
         String token = TicketUtil.getAccessToken(defaultEid, "resGroupSecret", openFileSecret, opensysHost);
         try {
@@ -110,7 +117,13 @@ public class YzjUploadService {
         return null;
     }
 
-    //图片上传
+    /**
+     * 图片上传
+     * @param base64Str
+     * @param fileName
+     * @return
+     * @throws Exception
+     */
     public String uploadPic(String base64Str, String fileName) throws Exception {
         try {
             JSONObject param = new JSONObject();
