@@ -19,15 +19,15 @@ public class TicketUtil {
 
     public static String getAccessToken(String eid, String scope, String secret, String host) {
         String timestamp = String.valueOf(System.currentTimeMillis());
-        Map parm = new HashMap();
-        parm.put("eid", eid);
-        parm.put("scope", scope);
-        parm.put("timestamp", timestamp);
-        parm.put("secret", secret);
+        Map<String, String> params = new HashMap<>(4);
+        params.put("eid", eid);
+        params.put("scope", scope);
+        params.put("timestamp", timestamp);
+        params.put("secret", secret);
         String url = host.concat("/gateway/oauth2/token/getAccessToken");
         JSONObject result = null;
         try {
-            String s = gatewayRequestJson(url, JSONObject.toJSONString(parm));
+            String s = gatewayRequestJson(url, JSONObject.toJSONString(params));
             result = JSONObject.parseObject(s).getJSONObject("data");
         } catch (Exception e) {
             logger.error("获取access_token信息失败!, 返回null", e);

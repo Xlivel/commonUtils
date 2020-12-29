@@ -46,6 +46,12 @@
         </dependency>
         <dependency>
             <groupId>com.data.common</groupId>
+            <artifactId>redisUtil</artifactId>
+            <version>1.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.data.common</groupId>
             <artifactId>logUtil</artifactId>
             <version>1.1-SNAPSHOT</version>
             <scope>compile</scope>

@@ -14,6 +14,7 @@ import java.util.*;
 
 /**
  * 推送公共号消息
+ * @author wj
  */
 public class PubaccService {
 

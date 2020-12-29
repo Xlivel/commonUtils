@@ -26,6 +26,7 @@ import java.io.*;
 
 /**
  * vv文件上传和图片上传
+ * @author wj
  */
 public class VVUploadService {
 
@@ -94,7 +95,7 @@ public class VVUploadService {
 
     public String uploadFile(File file) throws Exception {
         if (file != null) {
-            FileInputStream fis = file == null ? null : new FileInputStream(file);
+            FileInputStream fis = new FileInputStream(file);
             String contentType = new MimetypesFileTypeMap().getContentType(file);
             String s = uploadFile(contentType, fis, file.getName());
             JSONObject jsonObject = JSONObject.parseObject(s);
