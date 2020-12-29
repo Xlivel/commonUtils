@@ -37,10 +37,11 @@ public class MongoPoolInit implements BeanDefinitionRegistryPostProcessor, Envir
 
     private final ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
 
+    @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-
     }
 
+    @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
         int index = 0;
         for (MongoPoolProperties properties : pools) {
@@ -147,14 +148,15 @@ public class MongoPoolInit implements BeanDefinitionRegistryPostProcessor, Envir
                 .localThreshold(properties.getLocalThreshold()).build();
     }
 
+    @Override
     public void setEnvironment(Environment environment) {
         // 初始化配置信息到对象的映射
-        Map<String, Object> map = Binder.get(environment).bind("spring.data.mongodb", Map.class).get();
+        Map map = Binder.get(environment).bind("spring.data.mongodb", Map.class).get();
         Set<String> mongoTemplateNames = new TreeSet<>();
-        Set<String> keys = map.keySet();
+        Set keys = map.keySet();
 
-        for (String key : keys) {
-            String mongoTemplateName = key.split("\\.")[0];
+        for (Object key : keys) {
+            String mongoTemplateName = String.valueOf(key).split("\\.")[0];
             mongoTemplateNames.add(mongoTemplateName);
         }
 
@@ -165,7 +167,7 @@ public class MongoPoolInit implements BeanDefinitionRegistryPostProcessor, Envir
         }
     }
 
-    private void buildProperties(Map<String, Object> map, String name, MongoPoolProperties pro) {
+    private void  buildProperties(Map<String, Object> map, String name, MongoPoolProperties pro) {
         pro.setUri(formatStringValue(map, PoolAttributeTag.URI, ""));
         pro.setShowClass(formatBoolValue(map, PoolAttributeTag.SHOW_CLASS, true));
         pro.setMongoTemplateName(name);

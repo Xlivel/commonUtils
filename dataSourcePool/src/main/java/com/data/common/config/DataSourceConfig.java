@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author wj
+ */
 @Configuration
 public class DataSourceConfig {
 
@@ -35,7 +38,6 @@ public class DataSourceConfig {
     protected String resetEnable;
     @Value("${dataSource.druidStatPointcutPath:com.data.common.*}")
     protected String druidStatPointcutPath;
-
 
     @Bean
     public FilterRegistrationBean druidStatFilterBean() {
@@ -64,17 +66,8 @@ public class DataSourceConfig {
 
     @Bean
     public DruidStatInterceptor druidStatInterceptor() {
-        DruidStatInterceptor dsInterceptor = new DruidStatInterceptor();
-        return dsInterceptor;
+        return new DruidStatInterceptor();
     }
-
-    /*@Bean
-    @Scope("prototype")
-    public JdkRegexpMethodPointcut druidStatPointcut() {
-        JdkRegexpMethodPointcut pointcut = new JdkRegexpMethodPointcut();
-        pointcut.setPattern(druidStatPointcutPath);
-        return pointcut;
-    }*/
 
     @Bean
     public DefaultPointcutAdvisor druidStatAdvisor() {

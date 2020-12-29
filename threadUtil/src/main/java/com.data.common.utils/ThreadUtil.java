@@ -10,6 +10,8 @@ import java.util.function.Consumer;
 
 /**
  * 多线程工具类
+ *
+ * @author wj
  */
 public class ThreadUtil {
 
@@ -101,9 +103,15 @@ public class ThreadUtil {
     }
 
     public <T> List<T> getDataList(List<T> list, int pageSize, int pageNo) {
-        pageNo = (pageNo - 1) * pageSize;   //每页的起始索引
+        /**
+         * 每页的起始索引
+         */
+        pageNo = (pageNo - 1) * pageSize;
         List<T> finalResult = new ArrayList<>();
-        int sum = list.size(); //记录总数
+        /**
+         * 记录总数
+         */
+        int sum = list.size();
         if (pageNo + pageSize > sum) {
             finalResult.addAll(list.subList(pageNo, sum));
         } else {
