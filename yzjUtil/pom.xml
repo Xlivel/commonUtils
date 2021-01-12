@@ -5,7 +5,7 @@
     <parent>
         <artifactId>commonUtils</artifactId>
         <groupId>com.data.common</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -41,19 +41,19 @@
         <dependency>
             <groupId>com.data.common</groupId>
             <artifactId>httpUtil</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.data.common</groupId>
             <artifactId>redisUtil</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.data.common</groupId>
             <artifactId>logUtil</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
