@@ -24,6 +24,7 @@
         <module>yzjUtil</module>
         <module>commons</module>
         <module>mailUtil</module>
+        <module>WeChatUtil</module>
     </modules>
 
     <properties>

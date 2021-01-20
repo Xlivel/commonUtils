@@ -9,28 +9,28 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>commons</artifactId>
+    <artifactId>WeChatUtil</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.belerweb</groupId>
-            <artifactId>pinyin4j</artifactId>
-            <version>2.5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>jdom</groupId>
-            <artifactId>jdom</artifactId>
+            <groupId>com.data.common</groupId>
+            <artifactId>commons</artifactId>
             <version>1.1</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.googlecode.concurrentlinkedhashmap</groupId>-->
-<!--            <artifactId>concurrentlinkedhashmap-lru</artifactId>-->
-<!--            <version>1.4.2</version>-->
-<!--        </dependency>-->
         <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.3.0</version>
+            <groupId>com.data.common</groupId>
+            <artifactId>httpUtil</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
         </dependency>
     </dependencies>
+
 </project>
