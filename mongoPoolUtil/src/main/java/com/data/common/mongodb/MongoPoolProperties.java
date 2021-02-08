@@ -1,9 +1,15 @@
 package com.data.common.mongodb;
 
+/**
+ * @author wj
+ */
 public class MongoPoolProperties {
     private String mongoTemplateName = "mongoTemplate";
+    private String templateName;
 
     private String gridFsTemplateName = "gridFsTemplate";
+
+    private String gridFSBucketName = "gridFSBucket";
 
     private String applicationName;
 
@@ -20,7 +26,12 @@ public class MongoPoolProperties {
     private String authenticationDatabase;
     private String gridFsDatabase;
     private String username;
+    private String authenticationMechanism = "";
+    private String writeConcern;
+    private String readConcernLevel;
+
     private char[] password;
+
 
     private int minConnectionsPerHost;
     private int maxConnectionsPerHost = 100;
@@ -31,16 +42,38 @@ public class MongoPoolProperties {
     private int maxConnectionLifeTime;
     private int connectTimeout = 1000 * 10;
     private int socketTimeout = 0;
+    private int readTimeout = 10000;
+    private int receiveBufferSize = 10000;
+    private int sendBufferSize = 10000;
+
     private boolean socketKeepAlive = false;
     private boolean sslEnabled = false;
     private boolean sslInvalidHostNameAllowed = false;
     private boolean alwaysUseMBeans = false;
+    private boolean retryReads = false;
+    private boolean retryWrites = false;
 
     private int heartbeatFrequency = 10000;
     private int minHeartbeatFrequency = 500;
     private int heartbeatConnectTimeout = 20000;
     private int heartbeatSocketTimeout = 20000;
     private int localThreshold = 15;
+
+    public int getReceiveBufferSize() {
+        return receiveBufferSize;
+    }
+
+    public void setReceiveBufferSize(int receiveBufferSize) {
+        this.receiveBufferSize = receiveBufferSize;
+    }
+
+    public int getSendBufferSize() {
+        return sendBufferSize;
+    }
+
+    public void setSendBufferSize(int sendBufferSize) {
+        this.sendBufferSize = sendBufferSize;
+    }
 
     public String getMongoTemplateName() {
         return mongoTemplateName;
@@ -280,5 +313,69 @@ public class MongoPoolProperties {
 
     public void setLocalThreshold(int localThreshold) {
         this.localThreshold = localThreshold;
+    }
+
+    public String getGridFSBucketName() {
+        return gridFSBucketName;
+    }
+
+    public void setGridFSBucketName(String gridFSBucketName) {
+        this.gridFSBucketName = gridFSBucketName;
+    }
+
+    public String getAuthenticationMechanism() {
+        return authenticationMechanism;
+    }
+
+    public void setAuthenticationMechanism(String authenticationMechanism) {
+        this.authenticationMechanism = authenticationMechanism;
+    }
+
+    public String getWriteConcern() {
+        return writeConcern;
+    }
+
+    public void setWriteConcern(String writeConcern) {
+        this.writeConcern = writeConcern;
+    }
+
+    public String getReadConcernLevel() {
+        return readConcernLevel;
+    }
+
+    public void setReadConcernLevel(String readConcernLevel) {
+        this.readConcernLevel = readConcernLevel;
+    }
+
+    public boolean isRetryReads() {
+        return retryReads;
+    }
+
+    public void setRetryReads(boolean retryReads) {
+        this.retryReads = retryReads;
+    }
+
+    public boolean isRetryWrites() {
+        return retryWrites;
+    }
+
+    public void setRetryWrites(boolean retryWrites) {
+        this.retryWrites = retryWrites;
+    }
+
+    public String getTemplateName() {
+        return templateName;
+    }
+
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
     }
 }

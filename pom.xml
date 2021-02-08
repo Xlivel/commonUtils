@@ -7,7 +7,7 @@
     <groupId>com.data.common</groupId>
     <artifactId>commonUtils</artifactId>
     <packaging>pom</packaging>
-    <version>1.1</version>
+    <version>1.2</version>
     <modules>
         <module>redisUtil</module>
         <module>mongoPoolUtil</module>

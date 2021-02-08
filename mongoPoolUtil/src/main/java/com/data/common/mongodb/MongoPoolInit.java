@@ -1,9 +1,15 @@
 package com.data.common.mongodb;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
+import com.mongodb.*;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.connection.ConnectionPoolSettings;
+import com.mongodb.connection.ServerSettings;
+import com.mongodb.connection.SocketSettings;
+import com.mongodb.connection.SslSettings;
+import org.bson.codecs.Codec;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -19,21 +25,27 @@ import org.springframework.context.annotation.ScopeMetadata;
 import org.springframework.context.annotation.ScopeMetadataResolver;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * @author wj
+ */
 @Component
 public class MongoPoolInit implements BeanDefinitionRegistryPostProcessor, EnvironmentAware {
 
-    private final List<MongoPoolProperties> pools = new ArrayList<>();
+    private final Map<String, MongoClient> pools = new HashMap<>();
 
     private final ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
 
@@ -44,79 +56,39 @@ public class MongoPoolInit implements BeanDefinitionRegistryPostProcessor, Envir
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
         int index = 0;
-        for (MongoPoolProperties properties : pools) {
-            MongoClientOptions options = buildMongoOptions(properties);
-            List<ServerAddress> seeds;
-            // 优选选择URI构造链接
-            if (StringUtils.hasText(properties.getUri())) {
-                seeds = new ArrayList<>();
-                String[] uris = properties.getUri().split(",");
-                for (String u : uris) {
-                    String[] us = u.split(":");
-                    seeds.add(new ServerAddress(us[0], Integer.parseInt(us[1])));
-                }
-            } else {
-                seeds = Collections.singletonList(new ServerAddress(properties.getHost(), properties.getPort()));
-            }
-
-            MongoClient mongoClient;
-            // 认证信息
-            if (StringUtils.hasText(properties.getUsername()) &&
-                    StringUtils.hasText(properties.getAuthenticationDatabase()) && properties.getPassword() != null) {
-                MongoCredential cre = MongoCredential.createCredential(properties.getUsername(), properties.getAuthenticationDatabase(),
-                        properties.getPassword());
-                mongoClient = new MongoClient(seeds, cre, options);
-            } else {
-                mongoClient = new MongoClient(seeds, options);
-            }
-
-            SimpleMongoDbFactory mongoDbFactory;
-            if (StringUtils.hasText(properties.getDatabase())) {
-                mongoDbFactory = new SimpleMongoDbFactory(mongoClient, properties.getDatabase());
-            } else {
-                mongoDbFactory = new SimpleMongoDbFactory(mongoClient, properties.getGridFsDatabase());
-            }
-
-            MappingMongoConverter converter = buildConverter(mongoDbFactory, properties.isShowClass());
+        for (String key : pools.keySet()) {
+            SimpleMongoClientDbFactory mongoDbFactory =
+                    new SimpleMongoClientDbFactory(pools.get(key), key);
+            MappingMongoConverter converter = buildConverter(mongoDbFactory, false);
             boolean primary = false;
             if (index == 0) {
                 primary = true;
                 index++;
             }
-
-            registryMongoTemplate(registry, primary, properties, mongoDbFactory, converter);
-            registryGridFsTemplate(registry, primary, properties, mongoDbFactory, converter);
+            if (key != null && "".equals(key)) {
+                registry(registry, primary, mongoDbFactory, converter, MongoTemplate.class, key);
+            } else {
+                registry(registry, primary, mongoDbFactory, converter, GridFSBucket.class, key);
+                registry(registry, primary, mongoDbFactory, converter, GridFsTemplate.class, key);
+            }
         }
-
     }
 
-    private void registryGridFsTemplate(BeanDefinitionRegistry registry, boolean primary, MongoPoolProperties properties,
-                                        SimpleMongoDbFactory mongoDbFactory, MappingMongoConverter converter) {
-        AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(GridFsTemplate.class);
+    private void registry(BeanDefinitionRegistry registry, boolean primary, SimpleMongoClientDbFactory mongoDbFactory,
+                          MappingMongoConverter converter, Class<?> beanClass, String beanName) {
+        AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
         ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
         abd.setScope(scopeMetadata.getScopeName());
         abd.getConstructorArgumentValues().addGenericArgumentValue(mongoDbFactory);
         abd.getConstructorArgumentValues().addGenericArgumentValue(converter);
+//        abd.getConstructorArgumentValues().addGenericArgumentValue(beanName);
         abd.setPrimary(primary);
         AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
-        BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, properties.getGridFsTemplateName());
+        BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
         BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, registry);
     }
 
-    private void registryMongoTemplate(BeanDefinitionRegistry registry, boolean primary, MongoPoolProperties properties,
-                                       SimpleMongoDbFactory mongoDbFactory, MappingMongoConverter converter) {
-        AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(MongoTemplate.class);
-        ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
-        abd.setScope(scopeMetadata.getScopeName());
-        abd.getConstructorArgumentValues().addGenericArgumentValue(mongoDbFactory);
-        abd.getConstructorArgumentValues().addGenericArgumentValue(converter);
-        abd.setPrimary(primary);
-        AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
-        BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, properties.getMongoTemplateName());
-        BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, registry);
-    }
-
-    private MappingMongoConverter buildConverter(SimpleMongoDbFactory mongoDbFactory, boolean showClass) {
+    private MappingMongoConverter buildConverter(SimpleMongoClientDbFactory mongoDbFactory, boolean showClass) {
         MappingMongoConverter converter = new MappingMongoConverter(
                 new DefaultDbRefResolver(mongoDbFactory),
                 new MongoMappingContext());
@@ -126,59 +98,174 @@ public class MongoPoolInit implements BeanDefinitionRegistryPostProcessor, Envir
         return converter;
     }
 
-    private MongoClientOptions buildMongoOptions(MongoPoolProperties properties) {
-        return new MongoClientOptions.Builder()
-                .applicationName(properties.getApplicationName())
-                .connectionsPerHost(properties.getMaxConnectionsPerHost())
-                .minConnectionsPerHost(properties.getMinConnectionsPerHost())
-                .threadsAllowedToBlockForConnectionMultiplier(
-                        properties.getThreadsAllowedToBlockForConnectionMultiplier())
-                .serverSelectionTimeout(properties.getServerSelectionTimeout())
-                .maxWaitTime(properties.getMaxWaitTime())
-                .maxConnectionIdleTime(properties.getMaxConnectionIdleTime())
-                .maxConnectionLifeTime(properties.getMaxConnectionLifeTime())
-                .connectTimeout(properties.getConnectTimeout()).socketTimeout(properties.getSocketTimeout())
-                .socketKeepAlive(properties.isSocketKeepAlive()).sslEnabled(properties.isSslEnabled())
-                .sslInvalidHostNameAllowed(properties.isSslInvalidHostNameAllowed())
-                .alwaysUseMBeans(properties.isAlwaysUseMBeans())
-                .heartbeatFrequency(properties.getHeartbeatFrequency())
-                .minHeartbeatFrequency(properties.getMinHeartbeatFrequency())
-                .heartbeatConnectTimeout(properties.getHeartbeatConnectTimeout())
-                .heartbeatSocketTimeout(properties.getSocketTimeout())
-                .localThreshold(properties.getLocalThreshold()).build();
-    }
-
     @Override
     public void setEnvironment(Environment environment) {
         // 初始化配置信息到对象的映射
         Map map = Binder.get(environment).bind("spring.data.mongodb", Map.class).get();
         Set<String> mongoTemplateNames = new TreeSet<>();
         Set keys = map.keySet();
-
         for (Object key : keys) {
             String mongoTemplateName = String.valueOf(key).split("\\.")[0];
             mongoTemplateNames.add(mongoTemplateName);
         }
+        if (keys.size() > 1) {
+            for (String name : mongoTemplateNames) {
+                MongoPoolProperties pro = new MongoPoolProperties();
+                buildProperties((Map) map.get(name), name, pro);
+                MongoClient mongoClient = genMongoClient(formatStringValue(map, PoolAttributeTag.CONFIG, ""), pro);
+                pools.put(name, mongoClient);
+            }
+        } else {
+            for (String name : mongoTemplateNames) {
+                String connectionStr = formatStringValue((Map) map.get(name), PoolAttributeTag.CONFIG, "");
+                ConnectionString connectionString = buildConnectionString(connectionStr);
+                MongoClient mongoClient = genMongoClient(connectionString);
+                pools.put(name, mongoClient);
+            }
 
-        for (String name : mongoTemplateNames) {
-            MongoPoolProperties pro = new MongoPoolProperties();
-            buildProperties((Map) map.get(name), name, pro);
-            pools.add(pro);
         }
     }
 
-    private void  buildProperties(Map<String, Object> map, String name, MongoPoolProperties pro) {
-        pro.setUri(formatStringValue(map, PoolAttributeTag.URI, ""));
-        pro.setShowClass(formatBoolValue(map, PoolAttributeTag.SHOW_CLASS, true));
+    private ConnectionString buildConnectionString(String connectionStr) {
+        return new ConnectionString(connectionStr);
+    }
+
+    private MongoClient genMongoClient(ConnectionString connectionString) {
+        return MongoClients.create(connectionString);
+    }
+
+    private MongoClient genMongoClient(String connectionString, MongoPoolProperties properties) {
+
+        MongoClientSettings.Builder builder = MongoClientSettings.builder()
+                .applyConnectionString(buildConnectionString(connectionString))
+                .readPreference(ReadPreference.secondaryPreferred())
+                /*.autoEncryptionSettings()
+                .compressorList()
+                .applicationName()
+                .commandListenerList()
+                .addCommandListener()
+                .streamFactoryFactory()*/
+                .codecRegistry(genCodecRegistry(properties))
+                .credential(genMongoCredential(properties))
+                .readConcern(genReadConcern(properties))
+                .retryReads(properties.isRetryReads())
+                .retryWrites(properties.isRetryWrites())
+                .writeConcern(genWriteConcern(properties))
+                .applyToSslSettings(genSslSettings(properties))
+                .applyToServerSettings(genServerSettings(properties))
+                .applyToConnectionPoolSettings(genConnectionPoolSettings(properties))
+//                .applyToClusterSettings()
+                .applyToSocketSettings(genSocketSettings(properties));
+        MongoClientSettings build = builder.build();
+        return MongoClients.create(build);
+    }
+
+    private Block<ConnectionPoolSettings.Builder> genConnectionPoolSettings(MongoPoolProperties properties) {
+        return o -> {
+            o.maxSize(properties.getReadTimeout());
+            o.minSize(properties.getReadTimeout());
+            o.maxWaitQueueSize(properties.getReadTimeout());
+            o.maxWaitTime(properties.getReadTimeout(), TimeUnit.SECONDS);
+            o.maxConnectionLifeTime(properties.getReadTimeout(), TimeUnit.SECONDS);
+            o.maxConnectionIdleTime(properties.getReadTimeout(), TimeUnit.SECONDS);
+            o.maintenanceInitialDelay(properties.getReadTimeout(), TimeUnit.SECONDS);
+            o.maintenanceFrequency(properties.getReadTimeout(), TimeUnit.SECONDS);
+        };
+    }
+
+    private Block<SocketSettings.Builder> genSocketSettings(MongoPoolProperties properties) {
+        return o -> {
+            o.readTimeout(properties.getReadTimeout(), TimeUnit.SECONDS);
+            o.connectTimeout(properties.getConnectTimeout(), TimeUnit.SECONDS);
+            o.receiveBufferSize(properties.getReceiveBufferSize());
+            o.sendBufferSize(properties.getSendBufferSize());
+        };
+    }
+
+    private CodecRegistry genCodecRegistry(MongoPoolProperties properties) {
+        return new CodecRegistry() {
+            @Override
+            public <T> Codec<T> get(Class<T> aClass) {
+                return null;
+            }
+        };
+    }
+
+    private ReadConcern genReadConcern(MongoPoolProperties properties) {
+        ReadConcernLevel type = ReadConcernLevel.valueOf(properties.getReadConcernLevel());
+        switch (type) {
+            case LOCAL:
+                return new ReadConcern(ReadConcernLevel.LOCAL);
+            case MAJORITY:
+                return new ReadConcern(ReadConcernLevel.MAJORITY);
+            case LINEARIZABLE:
+                return new ReadConcern(ReadConcernLevel.LINEARIZABLE);
+            case SNAPSHOT:
+                return new ReadConcern(ReadConcernLevel.SNAPSHOT);
+            case AVAILABLE:
+                return new ReadConcern(ReadConcernLevel.AVAILABLE);
+            default:
+                return null;
+        }
+    }
+
+    private WriteConcern genWriteConcern(MongoPoolProperties properties) {
+        return WriteConcern.valueOf(properties.getWriteConcern());
+    }
+
+    private Block<ServerSettings.Builder> genServerSettings(MongoPoolProperties properties) {
+        return o -> {
+            ServerSettings.builder()
+                    .heartbeatFrequency(properties.getHeartbeatFrequency(), TimeUnit.SECONDS)
+                    .minHeartbeatFrequency(properties.getMinHeartbeatFrequency(), TimeUnit.SECONDS);
+        };
+    }
+
+    private Block<SslSettings.Builder> genSslSettings(MongoPoolProperties properties) {
+        return o -> {
+            o = SslSettings.builder()
+//                .context(new SSLContext(SSLContextSpi))
+                    .enabled(properties.isSslEnabled())
+                    .invalidHostNameAllowed(properties.isSslInvalidHostNameAllowed());
+        };
+    }
+
+    private MongoCredential genMongoCredential(MongoPoolProperties properties) {
+        AuthenticationMechanism type = AuthenticationMechanism.valueOf(properties.getAuthenticationMechanism());
+        switch (type) {
+            case GSSAPI:
+                return MongoCredential.createGSSAPICredential(properties.getUsername());
+            case PLAIN:
+                return MongoCredential.createPlainCredential(properties.getUsername(), properties.getAuthenticationDatabase(),
+                        properties.getPassword());
+            case MONGODB_X509:
+                return MongoCredential.createMongoX509Credential(properties.getUsername());
+            case MONGODB_CR:
+                return MongoCredential.createMongoCRCredential(properties.getUsername(), properties.getAuthenticationDatabase(),
+                        properties.getPassword());
+            case SCRAM_SHA_256:
+                return MongoCredential.createScramSha256Credential(properties.getUsername(), properties.getAuthenticationDatabase(),
+                        properties.getPassword());
+            default:
+                return MongoCredential.createCredential(properties.getUsername(), properties.getAuthenticationDatabase(),
+                        properties.getPassword());
+        }
+    }
+
+    private void buildProperties(Map<String, Object> map, String name, MongoPoolProperties pro) {
+        pro.setUri(formatStringValue(map, PoolAttributeTag.CONFIG, "mongodb://admin:123456@127.0.0.1:27017/admin"));
+//        pro.setUri(formatStringValue(map, PoolAttributeTag.URI, ""));
+        pro.setShowClass(formatBoolValue(map, PoolAttributeTag.SHOW_CLASS, false));
         pro.setMongoTemplateName(name);
         pro.setGridFsTemplateName(formatStringValue(map, PoolAttributeTag.GRID_FS_TEMPLATE_NAME, name + "GridFsTemplate"));
-        pro.setHost(formatStringValue(map, PoolAttributeTag.HOST, "localhost"));
+        pro.setGridFSBucketName(formatStringValue(map, PoolAttributeTag.GRID_FS_BUCKET_NAME, name + "GridFSBucket"));
+/*        pro.setHost(formatStringValue(map, PoolAttributeTag.HOST, "localhost"));
         pro.setPort(formatIntValue(map, PoolAttributeTag.PORT, 27017));
         pro.setDatabase(formatStringValue(map, PoolAttributeTag.DATABASE, "test"));
         pro.setAuthenticationDatabase(formatStringValue(map, PoolAttributeTag.AUTH_DATABASE, "admin"));
         pro.setGridFsDatabase(formatStringValue(map, PoolAttributeTag.GRIDFS_DATABASE, "test"));
         pro.setUsername(formatStringValue(map, PoolAttributeTag.USERNAME, null));
-        pro.setPassword(formatChatValue(map));
+        pro.setPassword(formatChatValue(map));*/
         pro.setApplicationName(formatStringValue(map, PoolAttributeTag.APPLICATIONNAME, null));
 
         pro.setMinConnectionsPerHost(formatIntValue(map, PoolAttributeTag.MIN_CONN_PERHOST, 0));
@@ -192,8 +279,10 @@ public class MongoPoolInit implements BeanDefinitionRegistryPostProcessor, Envir
         pro.setSocketTimeout(formatIntValue(map, PoolAttributeTag.SOCKET_TIMEOUT, 0));
 
         pro.setSocketKeepAlive(formatBoolValue(map, PoolAttributeTag.SOCKET_KEEP_ALIVE, false));
+
         pro.setSslEnabled(formatBoolValue(map, PoolAttributeTag.SSL_ENABLED, false));
         pro.setSslInvalidHostNameAllowed(formatBoolValue(map, PoolAttributeTag.SSL_INVALID_HOSTNAME_ALLOWED, false));
+
         pro.setAlwaysUseMBeans(formatBoolValue(map, PoolAttributeTag.ALWAYS_USE_MBEANS, false));
 
         pro.setHeartbeatFrequency(formatIntValue(map, PoolAttributeTag.HEARTBEAT_FREQUENCY, 10000));
