@@ -1,8 +1,14 @@
 package com.data.common.mongodb;
 
+/**
+ * @author wj
+ */
 public class PoolAttributeTag {
 
+    public static final String CONFIG = "config";
+
     public static final String GRID_FS_TEMPLATE_NAME = "gridFsTemplateName";
+    public static final String GRID_FS_BUCKET_NAME = "gridFSBucketName";
     public static final String SHOW_CLASS = "showClass";
     public static final String HOST = "host";
     public static final String URI = "uri";

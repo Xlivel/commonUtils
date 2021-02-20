@@ -2,6 +2,7 @@ package com.data.common.mongodb;
 
 import com.data.common.SpringContextUtil;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.conversions.Bson;
 import org.springframework.context.annotation.DependsOn;
@@ -10,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -18,6 +20,9 @@ import java.util.List;
 
 import static com.mongodb.client.model.Filters.eq;
 
+/**
+ * @author wj
+ */
 @SuppressWarnings("unchecked")
 @DependsOn(value = {"springContextUtil"})
 public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
@@ -26,9 +31,13 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
      */
     protected MongoTemplate mongoTemplate;
 
+    protected GridFSBucket gridFSBucket;
+
+    protected GridFsTemplate gridFsTemplate;
+
     protected String collectionName;
 
-    private Class<T> tClass;
+    private final Class<T> tClass;
 
     /**
      * 注入mongodbTemplate
@@ -43,7 +52,15 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
         MongoDbCol annotation = getClass().getAnnotation(MongoDbCol.class);
         if (annotation != null) {
             String value = annotation.value();
-            mongoTemplate = (MongoTemplate) SpringContextUtil.getBean(value);
+            if (value.endsWith("GridFsTemplate")) {
+                gridFsTemplate = (GridFsTemplate) SpringContextUtil.getBean(value);
+            }
+            if (value.endsWith("GridFSBucket")) {
+                gridFSBucket = (GridFSBucket) SpringContextUtil.getBean(value);
+            }
+            if (!value.endsWith("GridFsTemplate") && !value.endsWith("GridFSBucket")) {
+                mongoTemplate = (MongoTemplate) SpringContextUtil.getBean(value);
+            }
         }
 
         tClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
@@ -75,14 +92,10 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
     public T findByIdV1(String id, String collection) {
         Bson searchBson = eq("_id", id);
         FindIterable<org.bson.Document> documents = mongoTemplate.getCollection(collection).find(searchBson);
-        if (documents != null && documents.first() != null) {
+        if (documents.first() != null) {
             try {
                 return CastUtil.toBean(documents.first(), tClass);
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
+            } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
                 e.printStackTrace();
             }
         }
@@ -113,7 +126,7 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
         page.setTotalCount((int) count);
         int currentPage = page.getCurrentPage();
         int pageSize = page.getPageSize();
-        query.skip((currentPage - 1) * pageSize).limit(pageSize);
+        query.skip((long) (currentPage - 1) * pageSize).limit(pageSize);
         List<T> rows = this.find(query);
         page.build(rows);
         return page;
@@ -139,14 +152,13 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
 
     public UpdateResult update(T entity) {
         Field[] fields = this.getEntityClass().getDeclaredFields();
-        if (fields == null || fields.length <= 0) {
+        if (fields.length <= 0) {
             return null;
         }
         Field idField = null;
         // 查找ID的field  
         for (Field field : fields) {
-            if (field.getName() != null
-                    && "id".equals(field.getName().toLowerCase())) {
+            if ("id".equals(field.getName().toLowerCase())) {
                 idField = field;
                 break;
             }
@@ -158,9 +170,7 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
         String id = null;
         try {
             id = (String) idField.get(entity);
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (IllegalArgumentException | IllegalAccessException e) {
             e.printStackTrace();
         }
         if (id == null || "".equals(id.trim()))
@@ -189,14 +199,13 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
 
 
         Field[] fields = this.getEntityClass().getDeclaredFields();
-        if (fields == null || fields.length <= 0) {
+        if (fields.length <= 0) {
             return null;
         }
         Field idField = null;
         // 查找ID的field  
         for (Field field : fields) {
-            if (field.getName() != null
-                    && "id".equals(field.getName().toLowerCase())) {
+            if ("id".equals(field.getName().toLowerCase())) {
                 idField = field;
                 break;
             }
@@ -208,9 +217,7 @@ public class BaseMongoDaoImpl<T> implements BaseMongoDao<T> {
         String id = null;
         try {
             id = (String) idField.get(entity);
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (IllegalArgumentException | IllegalAccessException e) {
             e.printStackTrace();
         }
         if (id == null || "".equals(id.trim()))

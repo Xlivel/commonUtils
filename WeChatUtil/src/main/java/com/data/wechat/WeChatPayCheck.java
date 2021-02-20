@@ -20,14 +20,27 @@ public abstract class WeChatPayCheck {
     private String mchId;
     private String appId;
     private String signType;
+    private Integer limitTime;
 
+    /**
+     * 支付成功后调用
+     *
+     * @param orderId
+     * @return
+     */
     public abstract boolean afterSuccess(String orderId);
 
+    /**
+     * 支付失败后调用
+     *
+     * @param orderId
+     * @return
+     */
     public abstract boolean afterfail(String orderId);
 
     public Boolean checkWeChatStatus(String orderId, Date orderTime) throws Exception {
         //如果大于5分钟，关闭订单
-        if (System.currentTimeMillis() - orderTime.getTime() > 5 * 60 * 1000) {
+        if (System.currentTimeMillis() - orderTime.getTime() > limitTime) {
             //先查询微信订单状态
             String s = requestWeChatOrderStatus(orderId);
             if (StringUtils.isNoneBlank(s)) {
@@ -69,7 +82,10 @@ public abstract class WeChatPayCheck {
 
     private String closeWeChatOrder(String orderId) {
         Map<String, String> params = new HashMap<>();
-        params.put("appid", appId); //公众账号ID
+        /**
+         * 公众账号ID
+         */
+        params.put("appid", appId);
         params.put("mch_id", mchId);
         params.put("out_trade_no", orderId);
         params.put("nonce_str", "1560262851");
