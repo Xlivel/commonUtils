@@ -53,6 +53,9 @@ public class RedisConfig extends CachingConfigurerSupport {
     @Value("${spring.redis.password}")
     private String password;
 
+    @Value("${spring.redis.db}")
+    private Integer db;
+
     @Bean
     public JedisPool redisPoolFactory() {
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
@@ -63,7 +66,11 @@ public class RedisConfig extends CachingConfigurerSupport {
 
         JedisPool jedisPool = null;
         if (password != null && !"".equals(password)) {
-            jedisPool = new JedisPool(jedisPoolConfig, host, port, timeout, password);
+            if (db != null) {
+                jedisPool = new JedisPool(jedisPoolConfig, host, port, timeout, password, db);
+            } else {
+                jedisPool = new JedisPool(jedisPoolConfig, host, port, timeout, password);
+            }
         } else {
             jedisPool = new JedisPool(jedisPoolConfig, host, port, timeout);
         }

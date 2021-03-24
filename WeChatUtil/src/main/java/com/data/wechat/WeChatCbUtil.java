@@ -50,18 +50,18 @@ public abstract class WeChatCbUtil {
 
         // 判断签名是否正确
         if (WeChatCommonUtils.isSameSign(packageParams, apiKey)) {
-//            logger.info("微信支付成功回调");
+            //logger.info("微信支付成功回调");
             String resXml = "";
             if ("SUCCESS".equals((String) packageParams.get("result_code"))) {
                 //支付成功
                 String orderNo = (String) packageParams.get("out_trade_no");
-//                logger.info("微信订单号{}付款成功", orderNo);
+                //logger.info("微信订单号{}付款成功", orderNo);
                 //更新充值流水单状态
                 boolean result = false;
                 try {
                     result = businessExe(orderNo);
                 } catch (Exception e) {
-//                    logger.error("weChat支付成功，修改金额失败", e);
+                    //logger.error("weChat支付成功，修改金额失败", e);
                 }
                 // 通知微信.异步确认成功.必写.不然会一直通知后台.八次之后就认为交易失败了.
                 if (result) {
@@ -69,7 +69,7 @@ public abstract class WeChatCbUtil {
                             "<return_msg><![CDATA[OK]]></return_msg>" + "</xml> ";
                 }
             } else {
-//                logger.info("支付失败,错误信息：{}", packageParams.get("err_code"));
+                //logger.info("支付失败,错误信息：{}", packageParams.get("err_code"));
                 resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>" +
                         "<return_msg><![CDATA[报文为空]]></return_msg>" + "</xml> ";
             }
@@ -78,7 +78,7 @@ public abstract class WeChatCbUtil {
             out.flush();
             out.close();
         } else {
-//            logger.info("通知签名验证失败");
+            //logger.info("通知签名验证失败");
         }
     }
 

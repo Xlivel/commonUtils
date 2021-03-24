@@ -6,8 +6,6 @@ import com.data.common.commons.XMLUtil;
 import com.data.common.utils.HttpClientUtil;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -65,18 +63,18 @@ public class WeChatPayUtil {
             if ("SUCCESS".equals(returnCode)) {
                 String resultCode = (String) map.get("result_code");
                 if ("SUCCESS".equals(resultCode)) {
-//                    logger.info("订单号：{}生成微信支付码成功", orderId);
+                    //logger.info("订单号：{}生成微信支付码成功", orderId);
                     String urlCode = (String) map.get("code_url");
                     //转换为短链接
                     change2ShortUrl(urlCode);
                     return QrCodeUtil.createQrCode(urlCode, "./qrCode/", System.currentTimeMillis() + ".png");
                 } else {
                     String errCodeDes = (String) map.get("err_code_des");
-//                    logger.info("订单号：{}生成微信支付码(系统)失败:{}", orderId, errCodeDes);
+                    //logger.info("订单号：{}生成微信支付码(系统)失败:{}", orderId, errCodeDes);
                 }
             } else {
                 String returnMsg = (String) map.get("return_msg");
-//                logger.info("(订单号：{}生成微信支付码(通信)失败:{}", orderId, returnMsg);
+                //logger.info("(订单号：{}生成微信支付码(通信)失败:{}", orderId, returnMsg);
             }
         }
         return null;
